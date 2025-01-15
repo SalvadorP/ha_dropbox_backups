@@ -3,37 +3,37 @@ import dropbox
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Load environment variables from the .env file
 load_dotenv()
-
-# Retrieve configurations
 LOCAL_FOLDER = os.getenv("LOCAL_FOLDER")
 DROPBOX_FOLDER = os.getenv("DROPBOX_FOLDER")
 DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
 
-def get_latest_file(folder_path):
-    """Get the most recently modified file in the folder."""
-    files = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+def get_latest_modified_file(folder_path):
+    files = []
+
+    for item in os.listdir(folder_path):
+        full_path = os.path.join(folder_path, item)
+        if os.path.isfile(full_path):
+            files.append(full_path)
     if not files:
         return None
+
+    # File with the last modified date.
     latest_file = max(files, key=os.path.getmtime)
     return latest_file
 
 def upload_file_to_dropbox():
-    # Validate configurations
     if not LOCAL_FOLDER or not DROPBOX_FOLDER or not DROPBOX_ACCESS_TOKEN:
         print("Error: Missing configuration in .env file.")
         return
 
-    # Get the latest modified file
-    latest_file = get_latest_file(LOCAL_FOLDER)
+    latest_file = get_latest_modified_file(LOCAL_FOLDER)
     if not latest_file:
         print("No files found in the specified folder.")
         return
 
     file_name = os.path.basename(latest_file)
 
-    # Upload the file
     with open(latest_file, "rb") as f:
         try:
             dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
