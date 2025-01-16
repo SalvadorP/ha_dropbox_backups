@@ -7,18 +7,18 @@ from datetime import datetime
 load_dotenv()
 LOCAL_FOLDER = os.getenv("LOCAL_FOLDER")
 DROPBOX_FOLDER = os.getenv("DROPBOX_FOLDER")
-DROPBOX_TOKEN = os.getenv("DROPBOX_TOKEN")
+DROPBOX_REFRESH_TOKEN = os.getenv("DROPBOX_REFRESH_TOKEN")
 APP_KEY = os.getenv("DROPBOX_APP_KEY")
 APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
 
 def get_dropbox_client():
     try:
-        print(f"APP_KEY: {APP_KEY}, APP_SECRET: {APP_SECRET}, REFRESH_TOKEN: {DROPBOX_TOKEN}")
+        # print(f"APP_KEY: {APP_KEY}, APP_SECRET: {APP_SECRET}, REFRESH_TOKEN: {DROPBOX_REFRESH_TOKEN}")
 
         dbx = dropbox.Dropbox(
             app_key=APP_KEY,
             app_secret=APP_SECRET,
-            oauth2_refresh_token=DROPBOX_TOKEN,
+            oauth2_refresh_token=DROPBOX_REFRESH_TOKEN,
         )
         return dbx
     except AuthError as e:
@@ -40,7 +40,7 @@ def get_latest_modified_file(folder_path):
     return latest_file
 
 def upload_file_to_dropbox():
-    if not LOCAL_FOLDER or not DROPBOX_FOLDER or not DROPBOX_TOKEN:
+    if not LOCAL_FOLDER or not DROPBOX_FOLDER or not DROPBOX_REFRESH_TOKEN:
         print("Error: Missing configuration in .env file.")
         return
 
