@@ -1,12 +1,29 @@
 import os
-import dropbox
-from datetime import datetime
 from dotenv import load_dotenv
+import dropbox  # Ensure this is imported for accessing the `dropbox.files` namespace
+from dropbox.exceptions import AuthError
+from datetime import datetime
 
 load_dotenv()
 LOCAL_FOLDER = os.getenv("LOCAL_FOLDER")
 DROPBOX_FOLDER = os.getenv("DROPBOX_FOLDER")
-DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
+DROPBOX_TOKEN = os.getenv("DROPBOX_TOKEN")
+APP_KEY = os.getenv("DROPBOX_APP_KEY")
+APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
+
+def get_dropbox_client():
+    try:
+        print(f"APP_KEY: {APP_KEY}, APP_SECRET: {APP_SECRET}, REFRESH_TOKEN: {DROPBOX_TOKEN}")
+
+        dbx = dropbox.Dropbox(
+            app_key=APP_KEY,
+            app_secret=APP_SECRET,
+            oauth2_refresh_token=DROPBOX_TOKEN,
+        )
+        return dbx
+    except AuthError as e:
+        print(f"Failed to authenticate with Dropbox: {e}")
+        return None
 
 def get_latest_modified_file(folder_path):
     files = []
@@ -23,8 +40,12 @@ def get_latest_modified_file(folder_path):
     return latest_file
 
 def upload_file_to_dropbox():
-    if not LOCAL_FOLDER or not DROPBOX_FOLDER or not DROPBOX_ACCESS_TOKEN:
+    if not LOCAL_FOLDER or not DROPBOX_FOLDER or not DROPBOX_TOKEN:
         print("Error: Missing configuration in .env file.")
+        return
+
+    dbx = get_dropbox_client()
+    if not dbx:
         return
 
     latest_file = get_latest_modified_file(LOCAL_FOLDER)
@@ -36,9 +57,7 @@ def upload_file_to_dropbox():
 
     with open(latest_file, "rb") as f:
         try:
-            dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
             dropbox_path = os.path.join(DROPBOX_FOLDER, file_name)
-
             dbx.files_upload(f.read(), dropbox_path, mode=dropbox.files.WriteMode.overwrite)
             print(f"Uploaded {file_name} to Dropbox folder {DROPBOX_FOLDER}")
         except Exception as e:
